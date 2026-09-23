@@ -60,6 +60,5 @@ management:
 pantry:
   allowed-origin: ${PANTRY_ALLOWED_ORIGIN:http://localhost:3000}
   demo-mode: ${PANTRY_DEMO_MODE:false}
-  secure-cookie: ${PANTRY_SECURE_COOKIE:true}
   guest-session-ttl: PT168H
   guest-cleanup-delay: PT1H

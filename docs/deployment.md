@@ -11,7 +11,6 @@ Deploy one stateless Next.js service, one stateless Spring Boot service, and Pos
 | `SPRING_DATASOURCE_URL` | TLS-enabled managed PostgreSQL JDBC URL |
 | `SPRING_DATASOURCE_USERNAME/PASSWORD` | Least-privilege application role from secret storage |
 | `PANTRY_ALLOWED_ORIGIN` | Exact HTTPS frontend origin; never `*` with credentials |
-| `PANTRY_SECURE_COOKIE` | `true` |
 | `PANTRY_DEMO_MODE` | `false` |
 | `PANTRY_DB_POOL_SIZE` | Sized against total replicas and database connection budget |
 | `PANTRY_TRACE_SAMPLE_RATE` | Approved cost-sensitive value, normally `0.01`–`0.10` |
@@ -20,6 +19,8 @@ Deploy one stateless Next.js service, one stateless Spring Boot service, and Pos
 | `NEXT_PUBLIC_API_BASE_URL` | Public HTTPS API base ending in `/api/v1` |
 
 Provider credentials are added only by the selected adapters and must never be baked into images or frontend variables.
+
+Guest-session cookies are always `HttpOnly`, `Secure`, and `SameSite=Lax`; there is no configuration switch that can weaken them. Local browsers treat `localhost` as a trustworthy development origin, while every non-local deployment must terminate HTTPS before traffic reaches the application.
 
 ## Release sequence
 

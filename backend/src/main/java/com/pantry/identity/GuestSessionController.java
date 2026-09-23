@@ -33,7 +33,7 @@ class GuestSessionController {
         GuestSessionService.IssuedGuestSession issued = service.create();
         Cookie cookie = new Cookie(COOKIE_NAME, issued.token());
         cookie.setHttpOnly(true);
-        cookie.setSecure(properties.secureCookie());
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge((int) Duration.between(Instant.now(), issued.session().expiresAt()).toSeconds());
         cookie.setAttribute("SameSite", "Lax");
@@ -53,7 +53,7 @@ class GuestSessionController {
         service.delete(requireToken(token));
         Cookie cookie = new Cookie(COOKIE_NAME, "");
         cookie.setHttpOnly(true);
-        cookie.setSecure(properties.secureCookie());
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         cookie.setAttribute("SameSite", "Lax");

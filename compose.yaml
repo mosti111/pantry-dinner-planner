@@ -25,7 +25,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pantry-local-only}
       PANTRY_ALLOWED_ORIGIN: http://localhost:3000
       PANTRY_DEMO_MODE: "true"
-      PANTRY_SECURE_COOKIE: "false"
     ports:
       - "8080:8080"
     depends_on:

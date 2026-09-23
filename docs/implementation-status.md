@@ -32,7 +32,7 @@ The curated planner is the always-available baseline. A Spring AI adapter is an 
 
 Code-level safeguards are present, but production readiness also depends on environment and organizational controls:
 
-1. Set `PANTRY_SECURE_COOKIE=true`, `PANTRY_DEMO_MODE=false`, an exact HTTPS `PANTRY_ALLOWED_ORIGIN`, and managed database credentials.
+1. Set `PANTRY_DEMO_MODE=false`, an exact HTTPS `PANTRY_ALLOWED_ORIGIN`, and managed database credentials. Guest-session cookies are always marked `Secure` and cannot be weakened through configuration.
 2. Terminate TLS at a trusted ingress; apply request-body limits and distributed rate/cost limits there. Add Redis only if those limits must be coordinated in the application tier.
 3. Use managed secret storage, restricted database roles, encrypted backups, restore tests, centralized logs/metrics/traces, and alerting.
 4. Complete privacy retention notices, food-safety review, retailer contracts, and the incident runbooks in `security-operations.md`.

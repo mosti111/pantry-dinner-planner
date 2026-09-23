@@ -29,7 +29,6 @@ class PantryPostgresIntegrationTest {
         properties.add("spring.datasource.username", RealPostgres::username);
         properties.add("spring.datasource.password", RealPostgres::password);
         properties.add("pantry.allowed-origin", () -> "http://localhost:3000");
-        properties.add("pantry.secure-cookie", () -> false);
         properties.add("pantry.guest-session-ttl", () -> "PT1H");
         properties.add("management.tracing.export.otlp.enabled", () -> false);
     }
