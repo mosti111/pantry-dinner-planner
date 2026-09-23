@@ -1,0 +1,37 @@
+# IDE and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Secrets and local configuration
+.env
+.env.local
+!.env.example
+*.pem
+*.key
+
+# Java
+backend/target/
+*.class
+.mvn/timing.properties
+
+# JavaScript
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/coverage/
+*.tsbuildinfo
+frontend/AGENTS.md
+frontend/CLAUDE.md
+
+# Test and runtime artifacts
+test-results/
+playwright-report/
+logs/
+tmp/
+
+# Codex working files
+work/
+outputs/

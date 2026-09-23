@@ -1,0 +1,344 @@
+openapi: 3.1.0
+info:
+  title: Pantry Dinner Planner API
+  version: 1.0.0
+  description: Guest-first meal planning and full-package basket API. Retailer values are reference data unless a live adapter is configured.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Guest sessions
+  - name: Meal plans
+security:
+  - guestCookie: []
+paths:
+  /api/v1/csrf:
+    get:
+      tags: [Guest sessions]
+      security: []
+      operationId: getCsrfToken
+      responses:
+        '200':
+          description: Browser CSRF token and header name
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, headerName]
+                properties:
+                  token: { type: string }
+                  headerName: { type: string }
+  /api/v1/guest-sessions:
+    post:
+      tags: [Guest sessions]
+      security: []
+      operationId: createGuestSession
+      responses:
+        '201':
+          description: Guest session created; the opaque token is returned only as an HttpOnly cookie.
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GuestSession' }
+  /api/v1/guest-sessions/current:
+    get:
+      tags: [Guest sessions]
+      operationId: getCurrentGuestSession
+      responses:
+        '200':
+          description: Current session
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GuestSession' }
+        '401': { $ref: '#/components/responses/GuestRequired' }
+    delete:
+      tags: [Guest sessions]
+      operationId: deleteCurrentGuestSession
+      responses:
+        '204': { description: Session and guest-owned data deleted }
+        '401': { $ref: '#/components/responses/GuestRequired' }
+  /api/v1/meal-plans:
+    post:
+      tags: [Meal plans]
+      operationId: createMealPlan
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanningRequest' }
+      responses:
+        '201':
+          description: Plan created, or the original representation replayed for the same key and request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MealPlan' }
+        '400': { $ref: '#/components/responses/ValidationProblem' }
+        '401': { $ref: '#/components/responses/GuestRequired' }
+        '409': { $ref: '#/components/responses/ConflictProblem' }
+        '422': { $ref: '#/components/responses/InvalidPlan' }
+  /api/v1/meal-plans/{planId}:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    get:
+      tags: [Meal plans]
+      operationId: getMealPlan
+      responses:
+        '200':
+          description: Guest-owned plan
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MealPlan' }
+        '404': { $ref: '#/components/responses/NotFoundProblem' }
+  /api/v1/meal-plans/{planId}/basket/lines/{lineId}:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/LineId'
+    put:
+      tags: [Meal plans]
+      operationId: setBasketLineSelected
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [selected]
+              properties:
+                selected: { type: boolean }
+      responses:
+        '200': { $ref: '#/components/responses/MealPlanResponse' }
+        '404': { $ref: '#/components/responses/NotFoundProblem' }
+        '409': { $ref: '#/components/responses/ConflictProblem' }
+  /api/v1/meal-plans/{planId}/basket/lines/{lineId}/product:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/LineId'
+    put:
+      tags: [Meal plans]
+      operationId: selectBasketProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sku]
+              properties:
+                sku: { type: string, minLength: 1 }
+      responses:
+        '200': { $ref: '#/components/responses/MealPlanResponse' }
+        '409': { $ref: '#/components/responses/ConflictProblem' }
+        '422': { $ref: '#/components/responses/InvalidPlan' }
+  /api/v1/meal-plans/{planId}/basket/refresh:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [Meal plans]
+      operationId: refreshBasketOffers
+      responses:
+        '200': { $ref: '#/components/responses/MealPlanResponse' }
+        '409': { $ref: '#/components/responses/ConflictProblem' }
+  /api/v1/meal-plans/{planId}/meals/{slot}/replace:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - name: slot
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Meal plans]
+      operationId: replaceMeal
+      responses:
+        '200': { $ref: '#/components/responses/MealPlanResponse' }
+        '422': { $ref: '#/components/responses/InvalidPlan' }
+  /api/v1/meal-plans/{planId}/basket/finalize:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+    post:
+      tags: [Meal plans]
+      operationId: finalizeBasket
+      description: Rechecks price and availability before invoking the configured retailer cart capability.
+      responses:
+        '200': { $ref: '#/components/responses/MealPlanResponse' }
+        '409': { $ref: '#/components/responses/ConflictProblem' }
+        '422': { $ref: '#/components/responses/InvalidPlan' }
+  /api/v1/meal-plans/{planId}/basket/recovery-demo:
+    parameters:
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [Meal plans]
+      operationId: simulateRecovery
+      description: Demo-only endpoint; production returns 404 unless explicitly enabled.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scenario]
+              properties:
+                scenario: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/MealPlanResponse' }
+        '404': { $ref: '#/components/responses/NotFoundProblem' }
+components:
+  securitySchemes:
+    guestCookie:
+      type: apiKey
+      in: cookie
+      name: PANTRY_GUEST
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9._:-]+$' }
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    LineId:
+      name: lineId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    MealPlanResponse:
+      description: Updated meal plan
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/MealPlan' }
+    GuestRequired:
+      description: Valid guest session required
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationProblem:
+      description: Invalid JSON field
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ConflictProblem:
+      description: Idempotency or optimistic-lock conflict
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    InvalidPlan:
+      description: Constraints cannot be satisfied
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFoundProblem:
+      description: Resource is absent or not owned by this guest
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    GuestSession:
+      type: object
+      required: [id, expiresAt]
+      properties:
+        id: { type: string, format: uuid }
+        expiresAt: { type: string, format: date-time }
+    PlanningRequest:
+      type: object
+      additionalProperties: false
+      required: [householdSize, dinnerCount, budget, priority, dietaryRules, allergens, excludedIngredients, requirementsReviewed]
+      properties:
+        householdSize: { type: integer, minimum: 1, maximum: 12 }
+        dinnerCount: { type: integer, minimum: 1, maximum: 7 }
+        budget: { $ref: '#/components/schemas/Money' }
+        maxCookingMinutes: { type: [integer, 'null'], minimum: 10, maximum: 240 }
+        priority: { type: string, enum: [BALANCED, LOWER_COST, QUICKER, PROTEIN_RICH] }
+        dietaryRules: { type: array, maxItems: 4, uniqueItems: true, items: { type: string, maxLength: 40 } }
+        allergens: { type: array, maxItems: 14, uniqueItems: true, items: { type: string, maxLength: 40 } }
+        excludedIngredients: { type: array, maxItems: 30, uniqueItems: true, items: { type: string, maxLength: 100 } }
+        requirementsReviewed: { type: boolean }
+    MealPlan:
+      type: object
+      required: [id, status, householdSize, dinnerCount, budget, total, remaining, meals, basket, notices, updatedAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string }
+        householdSize: { type: integer }
+        dinnerCount: { type: integer }
+        budget: { $ref: '#/components/schemas/Money' }
+        total: { $ref: '#/components/schemas/Money' }
+        remaining: { $ref: '#/components/schemas/Money' }
+        meals: { type: array, items: { $ref: '#/components/schemas/Meal' } }
+        basket: { $ref: '#/components/schemas/Basket' }
+        notices: { type: array, items: { type: string } }
+        updatedAt: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+    Meal:
+      type: object
+      additionalProperties: true
+      required: [slot, title, minutes, servings, ingredients, method]
+      properties:
+        slot: { type: string }
+        title: { type: string }
+        minutes: { type: integer }
+        servings: { type: integer }
+        ingredients: { type: array, items: { $ref: '#/components/schemas/Ingredient' } }
+        method: { type: array, items: { type: string } }
+    Ingredient:
+      type: object
+      required: [key, name, quantity]
+      properties:
+        key: { type: string }
+        name: { type: string }
+        quantity: { $ref: '#/components/schemas/Quantity' }
+    Basket:
+      type: object
+      additionalProperties: true
+      required: [id, status, lines, completeTotal, alreadyAtHome, toBuy, selectedCount]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string }
+        lines: { type: array, items: { $ref: '#/components/schemas/BasketLine' } }
+        completeTotal: { $ref: '#/components/schemas/Money' }
+        alreadyAtHome: { $ref: '#/components/schemas/Money' }
+        toBuy: { $ref: '#/components/schemas/Money' }
+        selectedCount: { type: integer }
+        cartReference: { type: [string, 'null'] }
+    BasketLine:
+      type: object
+      additionalProperties: true
+      required: [id, ingredientKey, sku, packageCount, lineTotal, selected, availability, alternatives]
+      properties:
+        id: { type: string, format: uuid }
+        ingredientKey: { type: string }
+        sku: { type: string }
+        packageCount: { type: integer, minimum: 1 }
+        lineTotal: { $ref: '#/components/schemas/Money' }
+        selected: { type: boolean }
+        availability: { type: string, enum: [AVAILABLE, LOW_STOCK, UNAVAILABLE, UNKNOWN] }
+        alternatives: { type: array, items: { type: object, additionalProperties: true } }
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: { type: string, pattern: '^\d+(\.\d{1,2})?$' }
+        currency: { type: string, enum: [TRY] }
+    Quantity:
+      type: object
+      required: [value, unit]
+      properties:
+        value: { type: string }
+        unit: { type: string, enum: [GRAM, MILLILITER, EACH] }
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code, correlationId]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string, format: uri-reference }
+        code: { type: string }
+        correlationId: { type: string, format: uuid }

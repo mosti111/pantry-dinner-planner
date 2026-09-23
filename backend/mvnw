@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+BASE_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ ! -f "$BASE_DIR/.mvn/wrapper/maven-wrapper.jar" ]; then
+  echo 'Maven wrapper JAR is missing. Run "mvn wrapper:wrapper" once or use Docker Compose.' >&2
+  exit 1
+fi
+if [ -n "${JAVA_HOME:-}" ]; then
+  JAVA_COMMAND="$JAVA_HOME/bin/java"
+else
+  JAVA_COMMAND="java"
+fi
+exec "$JAVA_COMMAND" "-Dmaven.multiModuleProjectDirectory=$BASE_DIR" -classpath "$BASE_DIR/.mvn/wrapper/maven-wrapper.jar" org.apache.maven.wrapper.MavenWrapperMain "$@"

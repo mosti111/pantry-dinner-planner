@@ -1,0 +1,23 @@
+name: Feature proposal
+description: Propose a measurable product outcome
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and user outcome
+    validations:
+      required: true
+  - type: textarea
+    id: rules
+    attributes:
+      label: Domain rules and failure cases
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true

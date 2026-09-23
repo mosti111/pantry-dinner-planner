@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: pantry
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pantry}
+    username: ${SPRING_DATASOURCE_USERNAME:pantry}
+    password: ${SPRING_DATASOURCE_PASSWORD:pantry-local-only}
+    hikari:
+      maximum-pool-size: ${PANTRY_DB_POOL_SIZE:10}
+      connection-timeout: 3000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  shutdown: graceful
+  forward-headers-strategy: framework
+  max-http-request-header-size: 16KB
+  error:
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  tracing:
+    sampling:
+      probability: ${PANTRY_TRACE_SAMPLE_RATE:0.1}
+    export:
+      otlp:
+        enabled: ${PANTRY_OTLP_ENABLED:false}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
+  otlp:
+    metrics:
+      export:
+        enabled: ${PANTRY_OTLP_ENABLED:false}
+
+pantry:
+  allowed-origin: ${PANTRY_ALLOWED_ORIGIN:http://localhost:3000}
+  demo-mode: ${PANTRY_DEMO_MODE:false}
+  secure-cookie: ${PANTRY_SECURE_COOKIE:true}
+  guest-session-ttl: PT168H
+  guest-cleanup-delay: PT1H

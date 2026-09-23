@@ -1,0 +1,66 @@
+@import "./original-demo.css";
+
+.dialog-overlay,
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(44 26 39 / 28%);
+  backdrop-filter: blur(5px);
+}
+
+.sheet-overlay {
+  align-items: end;
+  padding: 0;
+}
+
+.change-sheet {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 82vh;
+  overflow: auto;
+  padding: 30px;
+  border-radius: 18px 18px 0 0;
+  background: var(--paper);
+  box-shadow: 0 -15px 60px rgb(43 22 40 / 18%);
+}
+
+.sheet-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  font-size: 1.8rem;
+}
+
+.alternative-card {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  text-align: left;
+}
+
+.alternative-card + .alternative-card { margin-top: 10px; }
+.alternative-card span { display: grid; }
+.alternative-card small { color: var(--muted); }
+.static-page { max-width: 760px; padding-top: 50px; }
+.static-page > h1 { margin-top: 32px; font-size: 3rem; }
+.static-page .setup-panel { margin-top: 28px; }
+.static-page .setup-panel h2 + p { margin-top: 16px; }
+
+@media (max-width: 800px) {
+  .dialog-overlay { padding: 0; }
+  .change-sheet { max-height: 92vh; padding: 25px 20px; }
+}
